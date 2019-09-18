@@ -4,6 +4,8 @@ use std::sync::Arc;
 use std::io::Result;
 use httpbis::ClientTlsOption;
 
+use tls_api::{TlsConnector, TlsConnectorBuilder};
+
 /// Represents bytes of the certificate
 /// could be used to create `grpc::Client`
 pub struct TLSCertificate {
@@ -32,10 +34,8 @@ impl TLSCertificate {
     }
 
     /// Creates the tls using this certificate
-    pub fn into_tls(self, host: &str) -> tls_api::Result<ClientTlsOption<tls_api_native_tls::TlsConnector>> {
-        use tls_api::TlsConnectorBuilder as _;
-
-        let mut builder = <tls_api_native_tls::TlsConnector as tls_api::TlsConnector>::builder()?;
+    pub fn into_tls(self, host: &str) -> tls_api::Result<ClientTlsOption<tls_api_rustls::TlsConnector>> {
+        let mut builder = tls_api_rustls::TlsConnector::builder()?;
         builder.add_root_certificate(self.raw)?;
         let connector = builder.build()?;
         Ok(ClientTlsOption::Tls(host.to_owned(), Arc::new(connector)))
